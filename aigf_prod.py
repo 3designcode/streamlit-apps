@@ -18,19 +18,19 @@ load_dotenv()
 def init_mongo_connection():
     """Initialize MongoDB connection with caching"""
     try:
-        # Get MongoDB credentials from secrets
-        mongo_settings = st.secrets["mongo"]
-        # Correctly format the MongoDB URI with proper URL encoding
-        mongo_uri = f"mongodb+srv://{mongo_settings['username']}:{mongo_settings['password']}@{mongo_settings['host']}/{mongo_settings['database']}?retryWrites=true&w=majority"
+        # For Atlas free tier, use this format
+        mongo_uri = "mongodb+srv://3designcode:m9UMR7KPsMjlDp3I@aigf.f6pbl.mongodb.net/?retryWrites=true&w=majority"
 
         client = MongoClient(
             mongo_uri,
-            serverSelectionTimeoutMS=20000,
-            tls=True,
-            tlsAllowInvalidCertificates=True
+            serverSelectionTimeoutMS=5000
         )
-        # Test connection
-        client.admin.command('ismaster')
+
+        # Select the database after connection
+        db = client.chat_history
+
+        # Test connection with the specific database
+        db.command('ping')
         return client
     except Exception as e:
         st.error(f"Failed to connect to MongoDB: {str(e)}")
