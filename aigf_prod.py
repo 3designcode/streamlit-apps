@@ -18,14 +18,17 @@ load_dotenv()
 def init_mongo_connection():
     """Initialize MongoDB connection with caching"""
     try:
-        # Use the full MongoDB Atlas URI with proper URL encoding
-        mongo_uri = "mongodb+srv://3designcode:zhprx4KFwPXWWUJY@aigf.f6pbl.mongodb.net/chat_history?retryWrites=true&w=majority"
+        # Get MongoDB URI from secrets
+        mongo_uri = get_secret("MONGODB_URI")
 
-        # Create client with minimal options
-        client = MongoClient(mongo_uri)
+        # Create client
+        client = MongoClient(mongo_uri,
+                             serverSelectionTimeoutMS=5000,
+                             tls=True)
 
-        # Test connection without ping command
-        client.admin.command('ismaster')
+        # Select database and test connection
+        db = client.get_database("chat_history")
+        db.command("ping")
         return client
     except Exception as e:
         st.error(f"Failed to connect to MongoDB: {str(e)}")
@@ -47,8 +50,15 @@ def clean_message_for_tts(message: str) -> str:
 
 class CloudChatStorage:
     def __init__(self):
-        self.client = init_mongo_connection()
-        self.db = self.client.chat_history
+        try:
+            self.client = init_mongo_connection()
+            # Explicitly select the chat_history database
+            self.db = self.client.get_database("chat_history")
+            # Test database access
+            self.db.list_collection_names()
+        except Exception as e:
+            st.error(f"Failed to initialize database connection: {str(e)}")
+            raise
 
     @st.cache_data(ttl=600)  # Cache for 10 minutes
     def get_recent_conversations(self, limit=10):
