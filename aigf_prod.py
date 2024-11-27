@@ -17,14 +17,14 @@ load_dotenv()
 @st.cache_resource
 def init_mongo_connection():
     """Initialize MongoDB connection with caching"""
-    mongo_uri = get_secret("MONGODB_URI")
-    client = MongoClient(
-        mongo_uri,
-        serverSelectionTimeoutMS=5000,
-        ssl=True,
-        tlsAllowInvalidCertificates=True
-    )
     try:
+        mongo_uri = get_secret("MONGODB_URI")
+        client = MongoClient(
+            mongo_uri,
+            serverSelectionTimeoutMS=20000,  # Increased timeout
+            tls=True,
+            tlsAllowInvalidCertificates=True
+        )
         # Test connection
         client.admin.command('ismaster')
         return client
