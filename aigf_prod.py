@@ -18,19 +18,14 @@ load_dotenv()
 def init_mongo_connection():
     """Initialize MongoDB connection with caching"""
     try:
-        # For Atlas free tier, use this format
-        mongo_uri = "mongodb+srv://3designcode:m9UMR7KPsMjlDp3I@aigf.f6pbl.mongodb.net/?retryWrites=true&w=majority"
+        # Use the full MongoDB Atlas URI with proper URL encoding
+        mongo_uri = "mongodb+srv://3designcode:zhprx4KFwPXWWUJY@aigf.f6pbl.mongodb.net/chat_history?retryWrites=true&w=majority"
 
-        client = MongoClient(
-            mongo_uri,
-            serverSelectionTimeoutMS=5000
-        )
+        # Create client with minimal options
+        client = MongoClient(mongo_uri)
 
-        # Select the database after connection
-        db = client.chat_history
-
-        # Test connection with the specific database
-        db.command('ping')
+        # Test connection without ping command
+        client.admin.command('ismaster')
         return client
     except Exception as e:
         st.error(f"Failed to connect to MongoDB: {str(e)}")
