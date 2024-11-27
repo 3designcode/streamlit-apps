@@ -52,24 +52,27 @@ class CloudChatStorage:
     def __init__(self):
         try:
             self.client = init_mongo_connection()
-            # Explicitly select the chat_history database
             self.db = self.client.get_database("chat_history")
-            # Test database access
             self.db.list_collection_names()
         except Exception as e:
             st.error(f"Failed to initialize database connection: {str(e)}")
             raise
 
-    @st.cache_data(ttl=600)  # Cache for 10 minutes
-    def get_recent_conversations(self, limit=10):
-        """Get the most recent conversations with caching"""
-        conversations = list(self.db.conversations.find()
+    @staticmethod
+    @st.cache_data(ttl=600)
+    def _cached_get_recent_conversations(db_name: str, limit: int = 10):
+        """Cached helper function for getting recent conversations"""
+        client = init_mongo_connection()
+        db = client.get_database(db_name)
+        conversations = list(db.conversations.find()
                            .sort('timestamp', -1)
                            .limit(limit))
-        # Convert to list to make hashable for caching
         return list(conversations)
 
-    # Rest of your methods remain the same
+    def get_recent_conversations(self, limit=10):
+        """Get the most recent conversations using cached helper"""
+        return self._cached_get_recent_conversations("chat_history", limit)
+
     def start_conversation(self):
         conversation = {
             'timestamp': datetime.now(),
