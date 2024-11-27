@@ -18,10 +18,14 @@ load_dotenv()
 def init_mongo_connection():
     """Initialize MongoDB connection with caching"""
     try:
-        mongo_uri = get_secret("MONGODB_URI")
+        # Get MongoDB credentials from secrets
+        mongo_settings = st.secrets["mongo"]
+        # Correctly format the MongoDB URI with proper URL encoding
+        mongo_uri = f"mongodb+srv://{mongo_settings['username']}:{mongo_settings['password']}@{mongo_settings['host']}/{mongo_settings['database']}?retryWrites=true&w=majority"
+
         client = MongoClient(
             mongo_uri,
-            serverSelectionTimeoutMS=20000,  # Increased timeout
+            serverSelectionTimeoutMS=20000,
             tls=True,
             tlsAllowInvalidCertificates=True
         )
